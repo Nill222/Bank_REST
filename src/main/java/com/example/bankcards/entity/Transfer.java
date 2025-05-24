@@ -1,10 +1,6 @@
 package com.example.bankcards.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,10 +8,6 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "transfer")
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
 public class Transfer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,6 +26,57 @@ public class Transfer {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    public Transfer() {
+    }
+
+    public Transfer(Long id, Card fromCard, Card toCard, BigDecimal amount, LocalDateTime createdAt) {
+        this.id = id;
+        this.fromCard = fromCard;
+        this.toCard = toCard;
+        this.amount = amount;
+        this.createdAt = createdAt;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Card getFromCard() {
+        return fromCard;
+    }
+
+    public void setFromCard(Card fromCard) {
+        this.fromCard = fromCard;
+    }
+
+    public Card getToCard() {
+        return toCard;
+    }
+
+    public void setToCard(Card toCard) {
+        this.toCard = toCard;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
     @Override
     public boolean equals(Object o) {
