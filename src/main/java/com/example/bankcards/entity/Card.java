@@ -2,10 +2,6 @@ package com.example.bankcards.entity;
 
 import com.example.bankcards.util.CardStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,11 +9,8 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "card")
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
 public class Card {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,6 +34,76 @@ public class Card {
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private User owner;
+
+    public Card() {
+    }
+
+    public Card(Long id, String number, String maskedNumber, LocalDate expiration,
+                CardStatus status, BigDecimal balance, User owner) {
+        this.id = id;
+        this.number = number;
+        this.maskedNumber = maskedNumber;
+        this.expiration = expiration;
+        this.status = status;
+        this.balance = balance;
+        this.owner = owner;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNumber() {
+        return number;
+    }
+
+    public void setNumber(String number) {
+        this.number = number;
+    }
+
+    public String getMaskedNumber() {
+        return maskedNumber;
+    }
+
+    public void setMaskedNumber(String maskedNumber) {
+        this.maskedNumber = maskedNumber;
+    }
+
+    public LocalDate getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(LocalDate expiration) {
+        this.expiration = expiration;
+    }
+
+    public CardStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(CardStatus status) {
+        this.status = status;
+    }
+
+    public BigDecimal getBalance() {
+        return balance;
+    }
+
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
+    }
+
+    public User getOwner() {
+        return owner;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
+    }
 
     @Override
     public boolean equals(Object o) {

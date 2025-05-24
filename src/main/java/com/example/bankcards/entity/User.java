@@ -2,8 +2,6 @@ package com.example.bankcards.entity;
 
 import com.example.bankcards.util.Role;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.List;
@@ -12,8 +10,6 @@ import java.util.Set;
 
 @Entity
 @Table(name = "card_user")
-@NoArgsConstructor
-@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,6 +32,27 @@ public class User {
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Card> cards;
+
+    public User() {
+    }
+
+    public User(Long id, String username, String fullName, String password,
+                Set<Role> roles, List<Card> cards) {
+        this.id = id;
+        this.username = username;
+        this.fullName = fullName;
+        this.password = password;
+        this.roles = roles;
+        this.cards = cards;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getUsername() {
         return username;

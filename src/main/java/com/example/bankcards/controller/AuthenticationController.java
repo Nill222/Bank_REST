@@ -1,7 +1,7 @@
 package com.example.bankcards.controller;
 
-import com.example.bankcards.dto.AuthRequest;
-import com.example.bankcards.dto.RegisterRequest;
+import com.example.bankcards.dto.AuthRequestDTO;
+import com.example.bankcards.dto.RegisterRequestDTO;
 import com.example.bankcards.service.JwtService;
 import com.example.bankcards.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +28,7 @@ public class AuthenticationController {
     private UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<String> login(@RequestBody AuthRequestDTO request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password()));
         UserDetails user = userService.loadUserByUsername(request.username());
@@ -36,7 +36,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<String> register(@RequestBody RegisterRequestDTO request) {
         userService.registerUser(request);
         return ResponseEntity.ok("User registered successfully");
     }
