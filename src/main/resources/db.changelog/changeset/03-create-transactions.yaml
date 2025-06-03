@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 03
+      author: I
+      preConditions:
+        onFail: MARK_RAN
+        preConditions:
+          - not:
+              tableExists:
+                tableName: transactions
+      changes:
+        - createTable:
+            tableName: transactions
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: uuid_generate_v4()
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: sender_card_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: receiver_card_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: NUMERIC(19,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transaction_time
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            constraintName: fk_transactions_sender_card_id_cards_id
+            baseTableName: transactions
+            baseColumnNames: sender_card_id
+            referencedTableName: cards
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            constraintName: fk_transactions_receiver_card_id_cards_id
+            baseTableName: transactions
+            baseColumnNames: receiver_card_id
+            referencedTableName: cards
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - sql:
+            sql: ALTER TABLE transactions ADD CONSTRAINT chk_transaction_amount CHECK (amount > 0)

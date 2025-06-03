@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: I
+      changes:
+        - sql: CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+  - include:
+      file: db.changelog/changeset/01-create-user.yaml
+
+  - include:
+      file: db.changelog/changeset/02-create-cards.yaml
+
+  - include:
+      file: db.changelog/changeset/03-create-transactions.yaml

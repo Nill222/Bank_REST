@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 02
+      author: I
+      preConditions:
+        onFail: MARK_RAN
+        preConditions:
+          - not:
+              tableExists:
+                tableName: cards
+      changes:
+        - createTable:
+            tableName: cards
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: uuid_generate_v4()
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: card_number
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: owner_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expiration_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: balance
+                  type: NUMERIC(19,2)
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            constraintName: fk_cards_owner_id_users_id
+            baseTableName: cards
+            baseColumnNames: owner_id
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - sql:
+            sql: ALTER TABLE cards ADD CONSTRAINT chk_card_status CHECK (status IN ('ACTIVE', 'BLOCKED', 'EXPIRED'))
