@@ -1,48 +1,51 @@
 package com.example.bankcards.service;
 
-import com.example.bankcards.dto.TransferDTO;
+import com.example.bankcards.dto.TransferRequestDto;
+import com.example.bankcards.dto.mapper.TransferRequestMapper;
 import com.example.bankcards.entity.Card;
-import com.example.bankcards.entity.Transfer;
+import com.example.bankcards.entity.Transaction;
 import com.example.bankcards.repository.CardRepository;
-import com.example.bankcards.repository.TransferRepository;
-import com.example.bankcards.util.CardStatus;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.bankcards.repository.TransactionRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class TransferService {
 
-    @Autowired
-    private CardRepository cardRepository;
-
-    @Autowired
-    private TransferRepository transferRepository;
+    private final CardRepository cardRepository;
+    private final TransactionRepository transactionRepository;
+    private final TransferRequestMapper transferRequestMapper;
 
     @Transactional
-    public void transfer(TransferDTO dto) {
-        Card from = cardRepository.findById(dto.fromCardId()).orElseThrow();
-        Card to = cardRepository.findById(dto.toCardId()).orElseThrow();
+    public void transfer(TransferRequestDto dto, UUID userId) {
 
-        if (from.getStatus() != CardStatus.ACTIVE || to.getStatus() != CardStatus.ACTIVE) {
-            throw new RuntimeException("Card status invalid");
+        Card from = cardRepository.findById(dto.getFromCardId())
+                .filter(c -> c.getOwner().getId().equals(userId))
+                .orElseThrow(() -> new IllegalArgumentException("Source card not found or access denied"));
+
+        Card to = cardRepository.findById(dto.getToCardId())
+                .filter(c -> c.getOwner().getId().equals(userId))
+                .orElseThrow(() -> new IllegalArgumentException("Destination card not found or access denied"));
+
+        if (from.getBalance().compareTo(dto.getAmount()) < 0) {
+            throw new IllegalArgumentException("Insufficient funds");
         }
 
-        if (from.getBalance().compareTo(dto.amount()) < 0) {
-            throw new RuntimeException("Insufficient balance");
-        }
+        from.setBalance(from.getBalance().subtract(dto.getAmount()));
+        to.setBalance(to.getBalance().add(dto.getAmount()));
 
-        from.setBalance(from.getBalance().subtract(dto.amount()));
-        to.setBalance(to.getBalance().add(dto.amount()));
+        Transaction transaction = transferRequestMapper.map(dto);
+        transaction.setSenderCard(from);
+        transaction.setReceiverCard(to);
+        transaction.setTransactionTime(LocalDateTime.now());
 
-        Transfer transfer = new Transfer();
-        transfer.setFromCard(from);
-        transfer.setToCard(to);
-        transfer.setAmount(dto.amount());
-        transfer.setCreatedAt(LocalDateTime.now());
-
-        transferRepository.save(transfer);
+        transactionRepository.save(transaction);
+        cardRepository.save(from);
+        cardRepository.save(to);
     }
 }

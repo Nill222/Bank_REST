@@ -1,53 +1,60 @@
 package com.example.bankcards.service;
 
-import com.example.bankcards.dto.RegisterRequestDTO;
-import com.example.bankcards.entity.User;
+import com.example.bankcards.dto.UserCreateEditDto;
+import com.example.bankcards.dto.UserReadDto;
+import com.example.bankcards.dto.mapper.UserCreateEditMapper;
+import com.example.bankcards.dto.mapper.UserReadMapper;
 import com.example.bankcards.repository.UserRepository;
-import com.example.bankcards.util.Role;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Set;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
-public class UserService implements UserDetailsService {
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class UserService {
+    private final UserRepository userRepository;
+    private final UserCreateEditMapper userCreateEditMapper;
+    private final UserReadMapper userReadMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    public void registerUser(RegisterRequestDTO request) {
-        if (userRepository.findByUsername(request.username()).isPresent()) {
-            throw new RuntimeException("Username already exists");
-        }
-
-        User user = new User();
-        user.setUsername(request.username());
-        user.setPassword(passwordEncoder.encode(request.password()));
-        user.setFullName(request.fullName());
-        user.setRoles(Set.of(Role.USER));
-
-        userRepository.save(user);
+    public Optional<UserReadDto> findById(UUID id) {
+        return userRepository.findById(id)
+                .map(userReadMapper::map);
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    @Transactional
+    public UserReadDto create(UserCreateEditDto user) {
+        return Optional.of(user)
+                .map(userCreateEditMapper::map)
+                .map(entity -> {
+                    entity.setPassword(passwordEncoder.encode(entity.getPassword()));
+                    return entity;
+                })
+                .map(userRepository::save)
+                .map(userReadMapper::map)
+                .orElse(null);
+    }
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                user.getRoles().stream()
-                        .map(r -> new SimpleGrantedAuthority("ROLE_" + r.name()))
-                        .toList()
-        );
+    @Transactional
+    public Optional<UserReadDto>  update(UUID id, UserCreateEditDto user) {
+        return userRepository.findById(id)
+                .map(entity -> userCreateEditMapper.map(user, entity))
+                .map(userRepository::saveAndFlush)
+                .map(userReadMapper::map);
+    }
+
+    @Transactional
+    public boolean delete(UUID id) {
+        return userRepository.findById(id)
+                .map(entity -> {
+                    userRepository.delete(entity);
+                    userRepository.flush();
+                    return true;
+                }).orElse(false);
     }
 }
