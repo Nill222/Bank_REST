@@ -1,126 +1,42 @@
 package com.example.bankcards.entity;
 
-import com.example.bankcards.util.Role;
 import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.Collection;
+import java.util.Collections;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "card_user")
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Table(name = "users")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class User extends BaseEntity implements UserDetails {
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(name = "fullname", nullable = false)
-    private String fullName;
+    @Column(nullable = false, unique = true)
+    private String email;
 
-    @Column(name = "password", nullable = false)
+    @Column(nullable = false)
     private String password;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles")
+    @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    @Column(name = "roles", nullable = false)
-    private Set<Role> roles = new HashSet<>();
-
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Card> cards;
-
-    public User() {
-    }
-
-    public User(Long id, String username, String fullName, String password,
-                Set<Role> roles, List<Card> cards) {
-        this.id = id;
-        this.username = username;
-        this.fullName = fullName;
-        this.password = password;
-        this.roles = roles;
-        this.cards = cards;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
-
-    public List<Card> getCards() {
-        return cards;
-    }
-
-    public void setCards(List<Card> cards) {
-        this.cards = cards;
-    }
+    private Role role;
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return Objects.equals(id, user.id)
-                && Objects.equals(username, user.username)
-                && Objects.equals(fullName, user.fullName)
-                && Objects.equals(password, user.password)
-                && Objects.equals(roles, user.roles)
-                && Objects.equals(cards, user.cards);
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singleton(role);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, username, fullName, password, roles, cards);
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", fullName='" + fullName + '\'' +
-                ", password='" + password + '\'' +
-                ", roles=" + roles +
-                ", cards=" + cards +
-                '}';
-    }
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
 }

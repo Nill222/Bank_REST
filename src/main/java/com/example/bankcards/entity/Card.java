@@ -1,138 +1,34 @@
 package com.example.bankcards.entity;
 
-import com.example.bankcards.util.CardStatus;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Objects;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "card")
-public class Card {
+@Table(name = "cards")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Card extends BaseEntity{
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "card_number", nullable = false, unique = true)
+    private String cardNumber;
 
-    @Column(name = "number", nullable = false)
-    private String number;
-
-    @Column(name = "masked_number", nullable = false)
-    private String maskedNumber;
-
-    @Column(name = "expiration", nullable = false)
-    private LocalDate expiration;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private CardStatus status;
-
-    @Column(name = "balance", nullable = false)
-    private BigDecimal balance;
-
-    @ManyToOne
-    @JoinColumn(name = "owner_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-    public Card() {
-    }
+    @Column(name = "expiration_date", nullable = false)
+    private LocalDate expirationDate;
 
-    public Card(Long id, String number, String maskedNumber, LocalDate expiration,
-                CardStatus status, BigDecimal balance, User owner) {
-        this.id = id;
-        this.number = number;
-        this.maskedNumber = maskedNumber;
-        this.expiration = expiration;
-        this.status = status;
-        this.balance = balance;
-        this.owner = owner;
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CardStatus status;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNumber() {
-        return number;
-    }
-
-    public void setNumber(String number) {
-        this.number = number;
-    }
-
-    public String getMaskedNumber() {
-        return maskedNumber;
-    }
-
-    public void setMaskedNumber(String maskedNumber) {
-        this.maskedNumber = maskedNumber;
-    }
-
-    public LocalDate getExpiration() {
-        return expiration;
-    }
-
-    public void setExpiration(LocalDate expiration) {
-        this.expiration = expiration;
-    }
-
-    public CardStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(CardStatus status) {
-        this.status = status;
-    }
-
-    public BigDecimal getBalance() {
-        return balance;
-    }
-
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
-    }
-
-    public User getOwner() {
-        return owner;
-    }
-
-    public void setOwner(User owner) {
-        this.owner = owner;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Card card = (Card) o;
-        return Objects.equals(id, card.id)
-                && Objects.equals(number, card.number)
-                && Objects.equals(maskedNumber, card.maskedNumber)
-                && Objects.equals(expiration, card.expiration)
-                && status == card.status && Objects.equals(balance, card.balance)
-                && Objects.equals(owner, card.owner);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, number, maskedNumber, expiration, status, balance, owner);
-    }
-
-    @Override
-    public String toString() {
-        return "Card{" +
-                "id=" + id +
-                ", number='" + number + '\'' +
-                ", maskedNumber='" + maskedNumber + '\'' +
-                ", expiration=" + expiration +
-                ", status=" + status +
-                ", balance=" + balance +
-                ", owner=" + owner +
-                '}';
-    }
+    @Column(nullable = false)
+    private BigDecimal balance;
 }
