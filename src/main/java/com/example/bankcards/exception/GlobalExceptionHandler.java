@@ -8,52 +8,71 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", status.value());
+        body.put("error", status.getReasonPhrase());
+        body.put("message", message);
+        return ResponseEntity.status(status).body(body);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-            errors.put(error.getField(), error.getDefaultMessage());
-        }
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        String errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.joining("; "));
         log.warn("Ошибка валидации: {}", errors);
-        return ResponseEntity.badRequest().body(errors);
+        return buildResponse(HttpStatus.BAD_REQUEST, errors);
     }
 
     @ExceptionHandler(CardNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleCardNotFound(CardNotFoundException ex) {
-        Map<String, String> error = Map.of("error", ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleCardNotFound(CardNotFoundException ex) {
         log.warn("Карточка не найдена: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler({InvalidCardStatusException.class, CardOperationException.class, IllegalArgumentException.class})
-    public ResponseEntity<Map<String, String>> handleBadRequests(RuntimeException ex) {
-        Map<String, String> error = Map.of("error", ex.getMessage());
+    @ExceptionHandler(TransactionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleTransactionNotFound(TransactionNotFoundException ex) {
+        log.warn("Транзакция не найдена: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler({
+            InvalidCardStatusException.class,
+            CardOperationException.class,
+            TransactionOperationException.class,
+            UserNotFoundException.class,
+            UserOperationException.class,
+            IllegalArgumentException.class
+    })
+    public ResponseEntity<Map<String, Object>> handleBadRequests(RuntimeException ex) {
         log.warn("Некорректный запрос: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Map<String, String>> handleBadCredentials() {
+    public ResponseEntity<Map<String, Object>> handleBadCredentials() {
         String msg = "Неверный логин или пароль";
         log.warn(msg);
-        Map<String, String> error = Map.of("error", msg);
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        return buildResponse(HttpStatus.UNAUTHORIZED, msg);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleAllExceptions(Exception ex) {
+    public ResponseEntity<Map<String, Object>> handleAllExceptions(Exception ex) {
         log.error("Внутренняя ошибка сервера: {}", ex.getMessage(), ex);
-        Map<String, String> error = Map.of("error", "Внутренняя ошибка сервера");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Внутренняя ошибка сервера");
     }
 }
