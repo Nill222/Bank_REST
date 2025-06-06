@@ -34,10 +34,10 @@ public class CardCreateEditMapper implements Mapper<CardCreateEditDto, Card> {
 
         if (object.getOwner() != null) {
             User owner = userRepository.findById(object.getOwner())
-                    .orElse(null);
+                    .orElseThrow(() -> new IllegalArgumentException("User not found with id " + object.getOwner()));
             card.setOwner(owner);
         } else {
-            card.setOwner(null);
+            throw new IllegalArgumentException("Owner ID must not be null");
         }
     }
 }

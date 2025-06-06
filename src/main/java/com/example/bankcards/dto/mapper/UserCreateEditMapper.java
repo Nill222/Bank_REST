@@ -3,11 +3,13 @@ package com.example.bankcards.dto.mapper;
 import com.example.bankcards.dto.UserCreateEditDto;
 import com.example.bankcards.entity.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class UserCreateEditMapper implements Mapper<UserCreateEditDto, User> {
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public User map(UserCreateEditDto object) {
@@ -26,6 +28,7 @@ public class UserCreateEditMapper implements Mapper<UserCreateEditDto, User> {
         user.setUsername(object.getUsername());
         user.setEmail(object.getEmail());
         user.setRole(object.getRole());
+        user.setPassword(passwordEncoder.encode(object.getPassword()));
     }
 }
 
