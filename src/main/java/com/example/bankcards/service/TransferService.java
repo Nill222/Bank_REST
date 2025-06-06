@@ -4,6 +4,8 @@ import com.example.bankcards.dto.TransferRequestDto;
 import com.example.bankcards.dto.mapper.TransferRequestMapper;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.Transaction;
+import com.example.bankcards.exception.CardAccessDeniedException;
+import com.example.bankcards.exception.InsufficientFundsException;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +28,14 @@ public class TransferService {
 
         Card from = cardRepository.findById(dto.getFromCardId())
                 .filter(c -> c.getOwner().getId().equals(userId))
-                .orElseThrow(() -> new IllegalArgumentException("Source card not found or access denied"));
+                .orElseThrow(() -> new CardAccessDeniedException(dto.getFromCardId()));
 
         Card to = cardRepository.findById(dto.getToCardId())
                 .filter(c -> c.getOwner().getId().equals(userId))
-                .orElseThrow(() -> new IllegalArgumentException("Destination card not found or access denied"));
+                .orElseThrow(() -> new CardAccessDeniedException(dto.getToCardId()));
 
         if (from.getBalance().compareTo(dto.getAmount()) < 0) {
-            throw new IllegalArgumentException("Insufficient funds");
+            throw new InsufficientFundsException();
         }
 
         from.setBalance(from.getBalance().subtract(dto.getAmount()));

@@ -3,7 +3,6 @@ package com.example.bankcards.dto.mapper;
 import com.example.bankcards.dto.PageResponseDto;
 import com.example.bankcards.dto.UserCardReadDto;
 import com.example.bankcards.entity.Card;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 

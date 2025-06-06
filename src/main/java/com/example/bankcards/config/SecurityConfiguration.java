@@ -24,7 +24,7 @@ import static com.example.bankcards.entity.Role.ADMIN;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 

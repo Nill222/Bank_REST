@@ -29,7 +29,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         String header = request.getHeader("Authorization");
 
-        // Проверяем, есть ли заголовок и начинается ли он с "Bearer "
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
 
@@ -37,10 +36,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 if (jwtTokenProvider.validateToken(token)) {
                     String username = jwtTokenProvider.getUsername(token);
 
-                    // Загружаем пользователя из базы (UserDetails)
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                    // Создаем объект аутентификации и помещаем в SecurityContext
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
 
@@ -49,12 +46,13 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             } catch (Exception ex) {
-                // Логирование исключения или другие действия, если нужно
-                // Но не прерываем фильтрацию, просто не аутентифицируем пользователя
+                System.err.println("JWT token processing failed: " + ex.getMessage());
+
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
+                return;
             }
         }
 
-        // Продолжаем цепочку фильтров
         filterChain.doFilter(request, response);
     }
 }

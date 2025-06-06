@@ -24,11 +24,9 @@ public class JwtTokenProvider {
         this.validityInMilliseconds = validityInMilliseconds;
     }
 
-    // Метод для создания токена из объекта Authentication
     public String createToken(Authentication authentication) {
         String username = authentication.getName();
 
-        // Собираем роли в строку через запятую, если их несколько
         String roles = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));

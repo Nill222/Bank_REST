@@ -1,0 +1,349 @@
+
+openapi: 3.0.1
+info:
+  title: Bank REST API
+  description: API для управления пользователями, картами, транзакциями и переводами.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /login:
+    post:
+      summary: Аутентификация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /cards/{id}:
+    get:
+      summary: Получение карты по ID (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Карта найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardReadDto'
+        '404':
+          description: Карта не найдена
+
+    put:
+      summary: Обновление карты (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardCreateEditDto'
+      responses:
+        '200':
+          description: Карта обновлена
+
+    delete:
+      summary: Удаление карты (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Успешно удалено
+        '404':
+          description: Не найдено
+
+  /cards:
+    post:
+      summary: Создание новой карты (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardCreateEditDto'
+      responses:
+        '200':
+          description: Карта создана
+
+  /cards/{id}/status:
+    patch:
+      summary: Изменение статуса карты (ADMIN или владелец)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Статус изменён
+
+  /cards/search:
+    get:
+      summary: Поиск карт текущего пользователя (USER)
+      parameters:
+        - name: cardNumber
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список карт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponseDto'
+
+  /transactions/{id}:
+    get:
+      summary: Получение транзакции по ID (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Транзакция найдена
+        '404':
+          description: Не найдена
+
+  /transactions:
+    post:
+      summary: Создание транзакции
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionCreateDto'
+      responses:
+        '200':
+          description: Транзакция создана
+
+  /transfer:
+    post:
+      summary: Перевод средств
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequestDto'
+      responses:
+        '200':
+          description: Перевод успешен
+        '400':
+          description: Ошибка
+
+  /users/me:
+    get:
+      summary: Получить текущего пользователя
+      responses:
+        '200':
+          description: Пользователь найден
+
+    put:
+      summary: Обновить текущего пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateEditDto'
+      responses:
+        '200':
+          description: Обновлено
+
+    delete:
+      summary: Удалить текущего пользователя
+      responses:
+        '204':
+          description: Удалено
+
+  /users/{id}:
+    get:
+      summary: Получить пользователя по ID (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Найдено
+        '404':
+          description: Не найдено
+
+    put:
+      summary: Обновить пользователя (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateEditDto'
+      responses:
+        '200':
+          description: Обновлено
+
+    delete:
+      summary: Удалить пользователя (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Удалено
+
+  /users:
+    post:
+      summary: Создать пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateEditDto'
+      responses:
+        '200':
+          description: Создано
+
+components:
+  schemas:
+    AuthRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+
+    CardReadDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        number:
+          type: string
+        status:
+          type: string
+
+    CardCreateEditDto:
+      type: object
+      properties:
+        number:
+          type: string
+
+    TransactionCreateDto:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+
+    TransactionReadDto:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+
+    TransferRequestDto:
+      type: object
+      properties:
+        fromCardId:
+          type: string
+          format: uuid
+        toCardId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+
+    UserCreateEditDto:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    UserReadDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+
+    PageResponseDto:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            type: object
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer

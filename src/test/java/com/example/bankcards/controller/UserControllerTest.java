@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false) // отключаем security фильтры для простоты
+@AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
 
     @Autowired

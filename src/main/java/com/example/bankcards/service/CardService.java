@@ -47,7 +47,6 @@ public class CardService {
         return userCardPageResponseMapper.map(page);
     }
 
-
     public PageResponseDto<CardReadDto> findByOwnerAndCardNumber(User owner, String cardNumber, Pageable pageable) {
         if (owner == null) {
             throw new IllegalArgumentException("Владелец карты не может быть null");
@@ -65,7 +64,7 @@ public class CardService {
     @Transactional
     public CardReadDto changeCardStatus(UUID cardId, CardStatus newStatus) {
         if (newStatus == null) {
-            throw new InvalidCardStatusException("null");
+            throw new InvalidCardStatusException("Новый статус карты не может быть null");
         }
 
         Card card = cardRepository.findById(cardId)
@@ -113,7 +112,10 @@ public class CardService {
         return cardRepository.findById(id)
                 .map(entity -> cardCreateEditMapper.map(card, entity))
                 .map(cardRepository::saveAndFlush)
-                .map(cardReadMapper::map);
+                .map(cardReadMapper::map)
+                .or(() -> {
+                    throw new CardNotFoundException(id);
+                });
     }
 
     @Transactional
@@ -131,8 +133,15 @@ public class CardService {
     }
 
     public boolean isOwner(UUID cardId, String username) {
+        if (cardId == null) {
+            throw new IllegalArgumentException("ID карты не может быть null");
+        }
+        if (username == null || username.isEmpty()) {
+            throw new IllegalArgumentException("Имя пользователя не может быть null или пустым");
+        }
+
         return cardRepository.findById(cardId)
                 .map(card -> card.getOwner().getUsername().equals(username))
-                .orElse(false);
+                .orElseThrow(() -> new CardNotFoundException(cardId));
     }
 }
