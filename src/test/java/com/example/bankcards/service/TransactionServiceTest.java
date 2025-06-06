@@ -6,6 +6,8 @@ import com.example.bankcards.dto.mapper.TransactionReadMapper;
 import com.example.bankcards.entity.Transaction;
 import com.example.bankcards.entity.CardStatus;
 import com.example.bankcards.entity.Role;
+import com.example.bankcards.exception.TransactionNotFoundException;
+import com.example.bankcards.exception.TransactionOperationException;
 import com.example.bankcards.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class TransactionServiceTest {
@@ -38,7 +40,7 @@ class TransactionServiceTest {
 
     @BeforeEach
     void setUp() {
-        AutoCloseable closeable = MockitoAnnotations.openMocks(this);
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -57,6 +59,27 @@ class TransactionServiceTest {
     }
 
     @Test
+    void findById_shouldThrowTransactionNotFoundException_whenNotFound() {
+        when(transactionRepository.findById(transactionId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> transactionService.findById(transactionId))
+                .isInstanceOf(TransactionNotFoundException.class)
+                .hasMessageContaining(transactionId.toString());
+
+        verify(transactionRepository).findById(transactionId);
+        verifyNoInteractions(transactionReadMapper);
+    }
+
+    @Test
+    void findById_shouldThrowIllegalArgumentException_whenIdIsNull() {
+        assertThatThrownBy(() -> transactionService.findById(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("ID транзакции не может быть null");
+
+        verifyNoInteractions(transactionRepository, transactionReadMapper);
+    }
+
+    @Test
     void create_shouldSaveTransactionAndReturnDto() {
         TransactionCreateDto createDto = buildTransactionCreateDto();
         Transaction transaction = buildTransaction();
@@ -72,6 +95,15 @@ class TransactionServiceTest {
         verify(transactionCreateMapper).map(createDto);
         verify(transactionRepository).save(transaction);
         verify(transactionReadMapper).map(transaction);
+    }
+
+    @Test
+    void create_shouldThrowIllegalArgumentException_whenDtoIsNull() {
+        assertThatThrownBy(() -> transactionService.create(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Данные транзакции не могут быть null");
+
+        verifyNoInteractions(transactionCreateMapper, transactionRepository, transactionReadMapper);
     }
 
     // ===== MOCK BUILDERS =====

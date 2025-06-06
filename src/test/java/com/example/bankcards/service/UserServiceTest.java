@@ -6,6 +6,8 @@ import com.example.bankcards.dto.mapper.UserCreateEditMapper;
 import com.example.bankcards.dto.mapper.UserReadMapper;
 import com.example.bankcards.entity.Role;
 import com.example.bankcards.entity.User;
+import com.example.bankcards.exception.UserNotFoundException;
+import com.example.bankcards.exception.UserOperationException;
 import com.example.bankcards.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +16,7 @@ import org.mockito.*;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class UserServiceTest {
@@ -54,7 +56,16 @@ class UserServiceTest {
     }
 
     @Test
-    void create_returnsUserReadDto_whenValid() {
+    void findById_shouldThrowException_whenIdIsNull() {
+        assertThatThrownBy(() -> userService.findById(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("ID пользователя не может быть null");
+
+        verifyNoInteractions(userRepository, userReadMapper);
+    }
+
+    @Test
+    void create_shouldReturnUserReadDto_whenValid() {
         UserCreateEditDto createDto = buildUserCreateDto();
         User user = buildUser();
         UserReadDto expectedDto = buildUserReadDto();
@@ -72,7 +83,16 @@ class UserServiceTest {
     }
 
     @Test
-    void update_returnsUpdatedUserReadDto_whenUserExists() {
+    void create_shouldThrowException_whenDtoIsNull() {
+        assertThatThrownBy(() -> userService.create(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Данные пользователя не могут быть null");
+
+        verifyNoInteractions(userCreateEditMapper, userRepository, userReadMapper);
+    }
+
+    @Test
+    void update_shouldReturnUpdatedUserReadDto_whenUserExists() {
         UserCreateEditDto editDto = buildUserCreateDto();
         User user = buildUser();
         User updatedUser = buildUser();
@@ -93,20 +113,41 @@ class UserServiceTest {
     }
 
     @Test
-    void update_returnsEmpty_whenUserNotFound() {
+    void update_shouldThrow_whenUserNotFound() {
         UserCreateEditDto editDto = buildUserCreateDto();
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        Optional<UserReadDto> result = userService.update(userId, editDto);
+        assertThatThrownBy(() -> userService.update(userId, editDto))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining(userId.toString());
 
-        assertThat(result).isEmpty();
         verify(userRepository).findById(userId);
         verifyNoMoreInteractions(userCreateEditMapper, userRepository, userReadMapper);
     }
 
     @Test
-    void delete_returnsTrue_whenUserExists() {
+    void update_shouldThrow_whenIdIsNull() {
+        UserCreateEditDto editDto = buildUserCreateDto();
+
+        assertThatThrownBy(() -> userService.update(null, editDto))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("ID пользователя не может быть null");
+
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void update_shouldThrow_whenDtoIsNull() {
+        assertThatThrownBy(() -> userService.update(userId, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Данные пользователя не могут быть null");
+
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void delete_shouldReturnTrue_whenUserExists() {
         User user = buildUser();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
@@ -119,17 +160,28 @@ class UserServiceTest {
     }
 
     @Test
-    void delete_returnsFalse_whenUserNotFound() {
+    void delete_shouldThrow_whenUserNotFound() {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
-        boolean result = userService.delete(userId);
+        assertThatThrownBy(() -> userService.delete(userId))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining(userId.toString());
 
-        assertThat(result).isFalse();
         verify(userRepository).findById(userId);
         verifyNoMoreInteractions(userRepository);
     }
 
-    // Вспомогательные методы
+    @Test
+    void delete_shouldThrow_whenIdIsNull() {
+        assertThatThrownBy(() -> userService.delete(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("ID пользователя не может быть null");
+
+        verifyNoInteractions(userRepository);
+    }
+
+    // ===== Вспомогательные билдеры =====
+
     private User buildUser() {
         return User.builder()
                 .username("testuser")

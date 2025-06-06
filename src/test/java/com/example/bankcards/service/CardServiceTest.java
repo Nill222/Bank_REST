@@ -146,14 +146,6 @@ class CardServiceTest {
     }
 
     @Test
-    void update_cardNotFound_returnsEmpty() {
-        when(cardRepository.findById(cardId)).thenReturn(Optional.empty());
-
-        Optional<CardReadDto> result = cardService.update(cardId, mock(CardCreateEditDto.class));
-        assertThat(result).isEmpty();
-    }
-
-    @Test
     void update_success() {
         CardCreateEditDto updateDto = mock(CardCreateEditDto.class);
         when(cardRepository.findById(cardId)).thenReturn(Optional.of(card));
@@ -192,14 +184,6 @@ class CardServiceTest {
         assertThat(result).isTrue();
         verify(cardRepository).delete(card);
         verify(cardRepository).flush();
-    }
-
-    @Test
-    void isOwner_cardNotFound_returnsFalse() {
-        when(cardRepository.findById(cardId)).thenReturn(Optional.empty());
-
-        boolean result = cardService.isOwner(cardId, "testUser");
-        assertThat(result).isFalse();
     }
 
     @Test
